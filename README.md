@@ -1,5 +1,7 @@
 # 2FA Authenticator
 
+<a href="https://www.aihonestybadge.com" target="_blank" rel="noopener"><img src="https://www.aihonestybadge.com/badges/ai-generated-large.svg" alt="AI Generated" height="28"></a>
+
 A client-side web app that shows live 6-digit TOTP codes from exports made by the **Bitwarden Authenticator** Android app.
 
 It runs entirely in the browser. Nothing is uploaded, and it works offline once loaded. Keep the folder on a USB drive and open `index.html` on any computer.
