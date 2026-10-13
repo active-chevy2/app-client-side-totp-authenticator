@@ -1,0 +1,33 @@
+# Exports and secrets
+*.json
+*.csv
+*.zip
+*.7z
+*.gpg
+
+# System
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+
+# Docker
+docker-compose.override.yml
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build
+dist/
+build/
