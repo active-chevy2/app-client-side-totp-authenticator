@@ -3,27 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FFFBFE">
     <title>2FA Authenticator</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Applies the saved colour theme before the page is painted. Keep it in <head>. -->
+    <script src="theme.js"></script>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>2FA Authenticator</h1>
-            <p class="subtitle">Live codes from your Bitwarden Authenticator exports</p>
+        <header class="app-header">
+            <div class="title-block">
+                <h1>2FA Authenticator</h1>
+                <p class="subtitle">Live codes from your Bitwarden Authenticator exports</p>
+            </div>
+            <div class="theme-switch" role="group" aria-label="Colour theme">
+                <button type="button" class="theme-option" data-theme-value="auto" aria-pressed="true">Auto</button>
+                <button type="button" class="theme-option" data-theme-value="light" aria-pressed="false">Light</button>
+                <button type="button" class="theme-option" data-theme-value="dark" aria-pressed="false">Dark</button>
+            </div>
         </header>
 
         <main>
             <section>
                 <h2>Load your export</h2>
-                <label for="file-input" class="file-button">Choose .json or .csv file(s)</label>
-                <input type="file" id="file-input" accept=".json,.csv" multiple>
+                <label class="file-button">
+                    <input type="file" id="file-input" accept=".json,.csv" multiple>
+                    <span>Choose .json or .csv file(s)</span>
+                </label>
                 <p class="hint">Export from the Bitwarden Authenticator app (Android). Files stay in your browser.</p>
                 <div id="message" class="message" hidden></div>
             </section>
 
             <section id="controls" class="controls" hidden>
-                <input type="text" id="search-input" placeholder="Search by name or account">
+                <input type="text" id="search-input" placeholder="Search by name or account" aria-label="Search accounts">
                 <span class="stats">Accounts: <strong id="total-count">0</strong></span>
             </section>
 
