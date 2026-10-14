@@ -3,18 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Live codes from your Bitwarden Authenticator exports">
     <meta name="theme-color" content="#FFFBFE">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="2FA Authenticator">
     <title>2FA Authenticator</title>
+    <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css">
     <!-- Applies the saved colour theme before the page is painted. Keep it in <head>. -->
     <script src="theme.js"></script>
+    <!-- Sets the title, description and logo from config.json. -->
+    <script src="app-config.js" defer></script>
 </head>
 <body>
     <div class="container">
         <header class="app-header">
-            <div class="title-block">
-                <h1>2FA Authenticator</h1>
-                <p class="subtitle">Live codes from your Bitwarden Authenticator exports</p>
+            <div class="brand">
+                <img id="app-logo" class="app-logo" alt="" hidden>
+                <div class="title-block">
+                    <h1 id="app-title">2FA Authenticator</h1>
+                    <p id="app-description" class="subtitle">Live codes from your Bitwarden Authenticator exports</p>
+                </div>
             </div>
             <div class="theme-switch" role="group" aria-label="Colour theme">
                 <button type="button" class="theme-option" data-theme-value="auto" aria-pressed="true">Auto</button>

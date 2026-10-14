@@ -440,6 +440,23 @@ footer {
 }
 
 /* ----------------------------------------------------------
+   Brand: logo from config.json, shown next to the title
+   ---------------------------------------------------------- */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.app-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+/* ----------------------------------------------------------
    Small screens and motion preferences
    ---------------------------------------------------------- */
 @media (max-width: 600px) {
