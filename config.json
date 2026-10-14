@@ -1,0 +1,7 @@
+{
+  "title": "2FA Authenticator",
+  "description": "Live codes from your Bitwarden Authenticator exports",
+  "short_name": "2FA Authenticator",
+  "icon_url": "https://icons.iconarchive.com/icons/gartoon-team/gartoon-apps/128/seahorse-key-ssh-icon.png",
+  "icon_size": "128x128"
+}
