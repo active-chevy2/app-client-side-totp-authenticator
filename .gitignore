@@ -1,5 +1,6 @@
 # Exports and secrets
 *.json
+!config.json
 *.csv
 *.zip
 *.7z
