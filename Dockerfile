@@ -21,7 +21,7 @@ ARG TERM
 ARG TZ
 ARG YARN_ENABLE_TELEMETRY
 
-COPY index.html style.css theme.js app-config.js parser.js totp.js app.js sw.js config.json manifest.webmanifest /usr/share/nginx/html/
+COPY index.html style.css theme.js app-config.js parser.js totp.js app.js sw.js config.json icon.svg manifest.webmanifest /usr/share/nginx/html/
 COPY vendor/ /usr/share/nginx/html/vendor/
 COPY fonts/ /usr/share/nginx/html/fonts/
 COPY nginx.conf /etc/nginx/conf.d/default.conf
