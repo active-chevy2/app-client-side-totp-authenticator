@@ -43,6 +43,7 @@
     --md-secondary-container: #E8DEF8;
     --md-on-secondary-container: #1D192B;
 
+    --md-error: #B3261E;
     --md-error-container: #F9DEDC;
     --md-on-error-container: #410E0B;
 
@@ -68,6 +69,7 @@
     --md-secondary-container: #4A4458;
     --md-on-secondary-container: #E8DEF8;
 
+    --md-error: #F2B8B5;
     --md-error-container: #8C1D18;
     --md-on-error-container: #F9DEDC;
 
@@ -94,6 +96,7 @@
         --md-secondary-container: #4A4458;
         --md-on-secondary-container: #E8DEF8;
 
+        --md-error: #F2B8B5;
         --md-error-container: #8C1D18;
         --md-on-error-container: #F9DEDC;
 
@@ -209,6 +212,13 @@ section {
     border-radius: 28px;
     padding: 24px;
     margin-bottom: 16px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+section.drag-over {
+    border-color: var(--md-primary);
+    background-color: var(--md-surface-container-high);
 }
 
 section h2 {
@@ -224,13 +234,20 @@ section h2 {
 #cards-section {
     background-color: transparent;
     padding: 0;
+    border: 0;
     border-radius: 0;
 }
 
 /* ----------------------------------------------------------
-   File picker (M3 filled button)
-   The real input is visually hidden inside the label, so it stays keyboard-accessible.
+   File picker & actions (M3 filled and outlined buttons)
    ---------------------------------------------------------- */
+.upload-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
 .file-button {
     position: relative;
     display: inline-flex;
@@ -265,6 +282,26 @@ section h2 {
     pointer-events: none;
 }
 
+.clear-btn {
+    appearance: none;
+    min-height: 40px;
+    padding: 10px 20px;
+    border: 1px solid var(--md-outline);
+    border-radius: 999px;
+    background-color: transparent;
+    color: var(--md-error);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.clear-btn:hover {
+    background-color: var(--md-error-container);
+    color: var(--md-on-error-container);
+    border-color: transparent;
+}
+
 .hint {
     margin-top: 12px;
     font-size: 0.875rem;
@@ -292,22 +329,22 @@ section h2 {
 }
 
 /* ----------------------------------------------------------
-   Search (M3 search bar)
+   Search and sort controls
    ---------------------------------------------------------- */
 .controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     margin-bottom: 16px;
 }
 
 #search-input {
-    flex: 1 1 260px;
-    min-height: 56px;
+    flex: 1 1 240px;
+    min-height: 48px;
     padding: 0 20px;
     border: 0;
-    border-radius: 28px;
+    border-radius: 24px;
     background-color: var(--md-surface-container-high);
     color: var(--md-on-surface);
     font: inherit;
@@ -319,14 +356,22 @@ section h2 {
     opacity: 1;
 }
 
-#search-input:focus-visible {
-    outline: 2px solid var(--md-primary);
-    outline-offset: 2px;
+.sort-select {
+    min-height: 48px;
+    padding: 0 16px;
+    border: 1px solid var(--md-outline);
+    border-radius: 24px;
+    background-color: var(--md-surface-container-high);
+    color: var(--md-on-surface);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
 }
 
 .stats {
     font-size: 0.875rem;
     color: var(--md-on-surface-variant);
+    padding: 0 4px;
 }
 
 /* ----------------------------------------------------------
@@ -369,12 +414,27 @@ section h2 {
 }
 
 .code-main {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    text-align: left;
+    font-family: inherit;
     font-size: 2.25rem;
     font-weight: 400;
     line-height: 1.2;
     letter-spacing: 0.08em;
     color: var(--md-primary);
     font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.code-main:hover {
+    opacity: 0.85;
+}
+
+.code-card.expiring .code-main {
+    color: var(--md-error);
 }
 
 /* M3 tonal button */
@@ -413,13 +473,22 @@ section h2 {
     height: 100%;
     border-radius: 999px;
     background-color: var(--md-primary);
-    transition: width 0.4s linear;
+    transition: width 0.4s linear, background-color 0.2s ease;
+}
+
+.code-card.expiring .time-fill {
+    background-color: var(--md-error);
 }
 
 .time-text {
     font-size: 0.75rem;
     text-align: right;
     color: var(--md-on-surface-variant);
+}
+
+.code-card.expiring .time-text {
+    color: var(--md-error);
+    font-weight: 500;
 }
 
 /* ----------------------------------------------------------

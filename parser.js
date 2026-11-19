@@ -2,7 +2,7 @@
 // Pure functions only: no DOM access, so they can be tested in Node.
 
 const OTP_PREFIX = 'otpauth://';
-const BASE32_PATTERN = /^[A-Z2-7\s=-]+$/i;
+const BASE32_PATTERN = /^[A-Z2-7]+$/;
 
 function safeDecode(value) {
     try {
@@ -10,6 +10,18 @@ function safeDecode(value) {
     } catch (err) {
         return value;
     }
+}
+
+function normaliseDigits(raw) {
+    const parsed = parseInt(raw, 10);
+    if (!Number.isInteger(parsed) || parsed < 4 || parsed > 10) return 6;
+    return parsed;
+}
+
+function normalisePeriod(raw) {
+    const parsed = parseInt(raw, 10);
+    if (!Number.isInteger(parsed) || parsed <= 0 || parsed > 86400) return 30;
+    return parsed;
 }
 
 /**
@@ -34,24 +46,25 @@ function parseOtpauthUri(uri, fallbackName) {
     const label = safeDecode(segments.slice(1).join('/'));
     const params = new URLSearchParams(queryPart);
 
-    const secret = (params.get('secret') || '').replace(/\s+/g, '').toUpperCase();
+    const secret = (params.get('secret') || '').replace(/\s+/g, '').replace(/=+$/, '').toUpperCase();
     if (!secret) return null;
 
     // Label is usually "Issuer:account@example.com"
     let labelIssuer = '';
-    let accountLabel = label;
+    let accountLabel = label.trim();
     if (label.includes(':')) {
         labelIssuer = label.slice(0, label.indexOf(':')).trim();
         accountLabel = label.slice(label.indexOf(':') + 1).trim();
     }
 
-    const issuer = params.get('issuer') || labelIssuer;
-    const digits = parseInt(params.get('digits'), 10) || 6;
-    const period = parseInt(params.get('period'), 10) || 30;
-    const algorithm = (params.get('algorithm') || 'SHA1').toUpperCase();
+    const cleanFallback = typeof fallbackName === 'string' ? fallbackName.trim() : '';
+    const issuer = (params.get('issuer') || labelIssuer).trim();
+    const digits = normaliseDigits(params.get('digits'));
+    const period = normalisePeriod(params.get('period'));
+    const algorithm = (params.get('algorithm') || 'SHA1').trim().toUpperCase();
 
     return {
-        name: fallbackName || issuer || accountLabel || 'Unnamed',
+        name: cleanFallback || issuer || accountLabel || 'Unnamed',
         issuer: issuer,
         account: accountLabel,
         secret: secret,
@@ -71,13 +84,14 @@ function parseTotpField(value, name) {
         return parseOtpauthUri(value, name);
     }
 
-    const compact = value.replace(/\s+/g, '');
-    if (compact.length >= 16 && BASE32_PATTERN.test(compact)) {
+    const compact = value.replace(/[\s-]+/g, '').replace(/=+$/, '').toUpperCase();
+    if (compact.length >= 8 && BASE32_PATTERN.test(compact)) {
+        const cleanName = typeof name === 'string' ? name.trim() : '';
         return {
-            name: name || 'Unnamed',
+            name: cleanName || 'Unnamed',
             issuer: '',
             account: '',
-            secret: compact.toUpperCase(),
+            secret: compact,
             algorithm: 'SHA1',
             digits: 6,
             period: 30
@@ -139,9 +153,9 @@ function accountsFromCsv(text) {
     if (rows.length === 0) return [];
 
     const header = rows[0].map(h => h.trim().toLowerCase());
-    const hasHeader = header.includes('login_totp') || header.includes('name');
+    const hasHeader = header.includes('login_totp') || header.includes('totp') || header.includes('name');
     const nameIdx = header.indexOf('name');
-    const totpIdx = header.indexOf('login_totp');
+    const totpIdx = header.indexOf('login_totp') >= 0 ? header.indexOf('login_totp') : header.indexOf('totp');
     const dataRows = hasHeader ? rows.slice(1) : rows;
 
     const accounts = [];
@@ -165,9 +179,14 @@ function accountsFromCsv(text) {
 }
 
 function accountsFromJson(text) {
-    const data = JSON.parse(text);
+    let data;
+    try {
+        data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    } catch (err) {
+        throw new Error('Invalid JSON format.');
+    }
 
-    if (data && data.encrypted === true) {
+    if (data && (data.encrypted === true || data.passwordProtected === true)) {
         throw new Error('This is an encrypted export. Encrypted files are not supported yet. Export as unencrypted JSON.');
     }
 
@@ -180,8 +199,10 @@ function accountsFromJson(text) {
 
     const accounts = [];
     for (const item of items) {
-        if (!item || !item.login) continue;
-        const account = parseTotpField(item.login.totp, item.name);
+        if (!item || typeof item !== 'object') continue;
+        const rawTotp = (item.login && item.login.totp) || item.totp;
+        if (!rawTotp) continue;
+        const account = parseTotpField(rawTotp, item.name);
         if (account) accounts.push(account);
     }
     return accounts;

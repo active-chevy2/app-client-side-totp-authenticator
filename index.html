@@ -21,7 +21,7 @@
     <div class="container">
         <header class="app-header">
             <div class="brand">
-                <img id="app-logo" class="app-logo" alt="" hidden>
+                <img id="app-logo" class="app-logo" src="icon.svg" alt="">
                 <div class="title-block">
                     <h1 id="app-title">2FA Authenticator</h1>
                     <p id="app-description" class="subtitle">Live codes from your Bitwarden Authenticator exports</p>
@@ -35,18 +35,26 @@
         </header>
 
         <main>
-            <section>
+            <section id="upload-section" class="upload-section">
                 <h2>Load your export</h2>
-                <label class="file-button">
-                    <input type="file" id="file-input" accept=".json,.csv" multiple>
-                    <span>Choose .json or .csv file(s)</span>
-                </label>
-                <p class="hint">Export from the Bitwarden Authenticator app (Android). Files stay in your browser.</p>
-                <div id="message" class="message" hidden></div>
+                <div class="upload-actions">
+                    <label class="file-button">
+                        <input type="file" id="file-input" accept=".json,.csv" multiple>
+                        <span>Choose .json or .csv file(s)</span>
+                    </label>
+                    <button type="button" id="clear-btn" class="clear-btn" hidden>Clear secrets</button>
+                </div>
+                <p class="hint">Export from the Bitwarden Authenticator app (Android), or drag and drop files here. Files stay in your browser.</p>
+                <div id="message" class="message" role="status" aria-live="polite" hidden></div>
             </section>
 
             <section id="controls" class="controls" hidden>
-                <input type="text" id="search-input" placeholder="Search by name or account" aria-label="Search accounts">
+                <input type="text" id="search-input" placeholder="Search by name, account, or issuer" aria-label="Search accounts">
+                <select id="sort-select" class="sort-select" aria-label="Sort accounts">
+                    <option value="default">Sort: Original order</option>
+                    <option value="name">Sort: App name (A–Z)</option>
+                    <option value="account">Sort: Account (A–Z)</option>
+                </select>
                 <span class="stats">Accounts: <strong id="total-count">0</strong></span>
             </section>
 
@@ -54,7 +62,7 @@
                 <div id="cards" class="cards"></div>
             </section>
 
-            <section id="empty-state" class="empty" hidden>
+            <section id="empty-state" class="empty">
                 <p>No 2FA codes loaded yet.</p>
             </section>
         </main>

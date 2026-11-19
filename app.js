@@ -1,28 +1,53 @@
 (() => {
     'use strict';
 
+    const uploadSection = document.getElementById('upload-section');
     const fileInput = document.getElementById('file-input');
+    const clearBtn = document.getElementById('clear-btn');
     const messageEl = document.getElementById('message');
     const controlsEl = document.getElementById('controls');
     const cardsSectionEl = document.getElementById('cards-section');
     const cardsEl = document.getElementById('cards');
     const emptyEl = document.getElementById('empty-state');
     const searchInput = document.getElementById('search-input');
+    const sortSelect = document.getElementById('sort-select');
     const totalEl = document.getElementById('total-count');
 
     let accounts = [];
+    const seenKeys = new Set();
 
-    fileInput.addEventListener('change', handleFiles);
+    fileInput.addEventListener('change', event => processFiles(event.target.files));
+    clearBtn.addEventListener('click', clearSecrets);
     searchInput.addEventListener('input', renderCards);
+    sortSelect.addEventListener('change', renderCards);
 
-    async function handleFiles(event) {
-        const files = Array.from(event.target.files || []);
+    // Drag-and-drop support on the upload card
+    ['dragenter', 'dragover'].forEach(evtName => {
+        uploadSection.addEventListener(evtName, event => {
+            event.preventDefault();
+            uploadSection.classList.add('drag-over');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(evtName => {
+        uploadSection.addEventListener(evtName, event => {
+            event.preventDefault();
+            uploadSection.classList.remove('drag-over');
+        });
+    });
+
+    uploadSection.addEventListener('drop', event => {
+        const files = event.dataTransfer && event.dataTransfer.files;
+        if (files && files.length > 0) processFiles(files);
+    });
+
+    async function processFiles(fileList) {
+        const files = Array.from(fileList || []);
         if (files.length === 0) return;
 
         const loaded = [];
         const problems = [];
 
-        // Wait for every file before checking results.
         for (const file of files) {
             try {
                 const text = await file.text();
@@ -32,31 +57,23 @@
             }
         }
 
-        // Remove duplicates (same secret and name across files)
-        const seen = new Set();
-        accounts = [];
+        let addedCount = 0;
         for (const account of loaded) {
-            const key = account.secret + '|' + account.name;
-            if (seen.has(key)) continue;
-            seen.add(key);
+            const key = `${account.secret}|${account.name}|${account.account}`;
+            if (seenKeys.has(key)) continue;
+            seenKeys.add(key);
             accounts.push(account);
+            addedCount++;
         }
 
-        if (accounts.length > 0) {
-            controlsEl.hidden = false;
-            cardsSectionEl.hidden = false;
-            emptyEl.hidden = true;
-            renderCards();
-        } else {
-            controlsEl.hidden = true;
-            cardsSectionEl.hidden = true;
-            emptyEl.hidden = false;
-        }
+        updateVisibility();
 
         if (problems.length > 0) {
             showMessage(problems.join(' | '), 'error');
-        } else if (accounts.length > 0) {
-            showMessage(`Loaded ${accounts.length} 2FA account(s).`, 'success');
+        } else if (addedCount > 0) {
+            showMessage(`Loaded ${addedCount} new 2FA account(s). Total: ${accounts.length}.`, 'success');
+        } else if (loaded.length > 0) {
+            showMessage('All accounts in the selected file(s) are already loaded.', 'success');
         } else {
             showMessage('No 2FA codes found in these files. Make sure they are Bitwarden Authenticator exports.', 'error');
         }
@@ -65,11 +82,49 @@
         fileInput.value = '';
     }
 
-    function renderCards() {
+    function clearSecrets() {
+        for (const acc of accounts) {
+            acc.secret = '';
+            acc.current = '';
+            acc.ui = null;
+        }
+        accounts = [];
+        seenKeys.clear();
+        searchInput.value = '';
+        cardsEl.textContent = '';
+        updateVisibility();
+        showMessage('Cleared all secrets from memory.', 'success');
+    }
+
+    function updateVisibility() {
+        const hasAccounts = accounts.length > 0;
+        controlsEl.hidden = !hasAccounts;
+        cardsSectionEl.hidden = !hasAccounts;
+        clearBtn.hidden = !hasAccounts;
+        emptyEl.hidden = hasAccounts;
+        if (hasAccounts) renderCards();
+    }
+
+    function getSortedFilteredAccounts() {
         const query = searchInput.value.trim().toLowerCase();
-        const visible = accounts.filter(acc =>
+        const filtered = accounts.filter(acc =>
             !query || `${acc.name} ${acc.account} ${acc.issuer}`.toLowerCase().includes(query)
         );
+
+        const sortMode = sortSelect.value;
+        if (sortMode === 'name') {
+            return [...filtered].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        }
+        if (sortMode === 'account') {
+            return [...filtered].sort((a, b) =>
+                (a.account || a.name).localeCompare(b.account || b.name, undefined, { sensitivity: 'base' })
+            );
+        }
+        return filtered;
+    }
+
+    function renderCards() {
+        const visible = getSortedFilteredAccounts();
 
         cardsEl.textContent = '';
         for (const acc of accounts) acc.ui = null;
@@ -79,7 +134,10 @@
             cardsEl.appendChild(card);
         }
 
-        totalEl.textContent = accounts.length;
+        totalEl.textContent = visible.length === accounts.length
+            ? String(accounts.length)
+            : `${visible.length} / ${accounts.length}`;
+
         tick();
     }
 
@@ -98,15 +156,20 @@
         const row = document.createElement('div');
         row.className = 'code-row';
 
-        const codeEl = document.createElement('div');
+        const codeEl = document.createElement('button');
+        codeEl.type = 'button';
         codeEl.className = 'code-main';
+        codeEl.title = 'Click to copy code';
         codeEl.textContent = '--- ---';
 
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
         copyBtn.className = 'copy-btn';
         copyBtn.textContent = 'Copy';
-        copyBtn.addEventListener('click', () => copyText(acc.current || '', copyBtn));
+
+        const triggerCopy = () => copyText(acc.current || '', copyBtn);
+        codeEl.addEventListener('click', triggerCopy);
+        copyBtn.addEventListener('click', triggerCopy);
 
         row.append(codeEl, copyBtn);
 
@@ -120,7 +183,7 @@
         timeText.className = 'time-text';
 
         card.append(name, sub, row, bar, timeText);
-        acc.ui = { codeEl, fill, timeText };
+        acc.ui = { card, codeEl, fill, timeText };
         return card;
     }
 
@@ -134,10 +197,12 @@
                 acc.ui.codeEl.textContent = formatCode(result.code);
                 acc.ui.fill.style.width = (result.remaining / result.period * 100) + '%';
                 acc.ui.timeText.textContent = result.remaining + 's';
+                acc.ui.card.classList.toggle('expiring', result.remaining <= 5);
             } catch (err) {
                 acc.current = '';
                 acc.ui.codeEl.textContent = 'Error';
                 acc.ui.timeText.textContent = err.message;
+                acc.ui.card.classList.remove('expiring');
             }
         }
     }

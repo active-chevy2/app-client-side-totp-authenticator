@@ -4,7 +4,7 @@ const crypto = require('crypto');
 
 global.CryptoJS = require('../vendor/crypto-js.js');
 const { base32ToBytes, generateTOTP } = require('../totp.js');
-const { parseExportFile, parseTotpField } = require('../parser.js');
+const { parseExportFile, parseTotpField, parseOtpauthUri } = require('../parser.js');
 
 let passed = 0;
 function test(name, fn) {
@@ -65,14 +65,22 @@ test('RFC 6238 SHA256 and SHA512 vectors', () => {
 
 test('remaining seconds count down correctly', () => {
     const r = generateTOTP({ secret: 'GEZDGNBVGY3TQOJQ' }, 59 * 1000);
-    assert.strictEqual(r.remaining, 1); // 59 is 29s into the 30-30 window -> 1s left
+    assert.strictEqual(r.remaining, 1);
 });
 
-test('base32 decoder rejects invalid characters', () => {
+test('base32 decoder rejects invalid characters and mid-string padding', () => {
     assert.throws(() => base32ToBytes('ABC1'), /Invalid base32/);
+    assert.throws(() => base32ToBytes('AB=CD'), /Invalid base32/);
+    assert.deepStrictEqual(base32ToBytes('JBSWY3DPEHPK3PXP===='), base32ToBytes('JBSWY3DPEHPK3PXP'));
 });
 
-// Sample files from the user (Bitwarden Authenticator exports)
+test('generateTOTP rejects invalid digits or period', () => {
+    assert.throws(() => generateTOTP({ secret: 'JBSWY3DPEHPK3PXP', period: 0 }), /Invalid period/);
+    assert.throws(() => generateTOTP({ secret: 'JBSWY3DPEHPK3PXP', period: -30 }), /Invalid period/);
+    assert.throws(() => generateTOTP({ secret: 'JBSWY3DPEHPK3PXP', digits: 2 }), /Invalid digit/);
+});
+
+// Sample files from Bitwarden Authenticator exports
 const SAMPLE_CSV = `folder,favorite,type,name,login_uri,login_totp
 ,,1,elogic.synology.me,,otpauth://totp/elogic.synology.me%3Atest%40elogic.synology.me?secret=65TV7MIRZ5FV5MX24NVVXXD3MG7UDGPD&algorithm=SHA1&digits=6&period=30&issuer=elogic.synology.me,elogic.synology.me,30,6
 ,,1,totp@authenticationtest.com,,otpauth://totp/totp%40authenticationtest.com%3Atotp%40authenticationtest.com?secret=I65VU7K5ZQL7WB4E&algorithm=SHA1&digits=6&period=30&issuer=totp%40authenticationtest.com,totp@authenticationtest.com,30,6`;
@@ -142,9 +150,20 @@ test('encrypted JSON gives a clear error', () => {
     assert.throws(() => parseExportFile('x.json', encrypted), /encrypted export/i);
 });
 
-test('bare base32 secret is accepted', () => {
-    const acc = parseTotpField('JBSWY3DPEHPK3PXP', 'Test');
+test('corrupt JSON gives a readable error', () => {
+    assert.throws(() => parseExportFile('broken.json', '{bad json'), /Invalid JSON/);
+});
+
+test('bare and hyphenated base32 secrets are accepted', () => {
+    const acc = parseTotpField('JBSW-Y3DP-EHPK-3PXP', 'Test');
     assert.strictEqual(acc.secret, 'JBSWY3DPEHPK3PXP');
+});
+
+test('invalid period/digits and whitespace fallback names in otpauth URI are sanitised', () => {
+    const acc = parseOtpauthUri('otpauth://totp/GitHub:alice?secret=JBSWY3DPEHPK3PXP&period=-10&digits=99', '   ');
+    assert.strictEqual(acc.name, 'GitHub');
+    assert.strictEqual(acc.period, 30);
+    assert.strictEqual(acc.digits, 6);
 });
 
 test('unsupported file type is rejected', () => {
