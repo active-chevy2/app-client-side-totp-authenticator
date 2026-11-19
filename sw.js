@@ -2,12 +2,12 @@
 //
 // - App files, config.json and fonts are cached at install time.
 // - Same-site requests try the network first, so updates arrive, and fall back to the cache offline.
-// - Cross-site images (the logo) are cached the first time they load.
+// - Cross-site images (external logo) are cached the first time they load.
 //
 // Loaded secrets never reach this worker: they are read by the page from the
 // file picker and stay in memory. Nothing secret is ever fetched or cached.
 
-const CACHE_NAME = 'totp-app';
+const CACHE_NAME = 'totp-app-v2';
 
 const APP_FILES = [
     './',
@@ -36,16 +36,23 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-    event.waitUntil(self.clients.claim());
+    event.waitUntil(
+        caches.keys()
+            .then(keys => Promise.all(
+                keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+            ))
+            .then(() => self.clients.claim())
+    );
 });
 
 self.addEventListener('fetch', event => {
     const request = event.request;
     if (request.method !== 'GET') return;
 
-    const sameSite = new URL(request.url).origin === self.location.origin;
+    const url = new URL(request.url);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 
-    if (sameSite) {
+    if (url.origin === self.location.origin) {
         event.respondWith(networkFirst(request));
     } else if (request.destination === 'image') {
         event.respondWith(cacheFirst(request));
