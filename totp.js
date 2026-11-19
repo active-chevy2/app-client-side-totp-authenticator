@@ -4,7 +4,7 @@
 const BASE32_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
 function base32ToBytes(input) {
-    const clean = String(input).replace(/[\s=-]/g, '').toUpperCase();
+    const clean = String(input).replace(/[\s-]+/g, '').replace(/=+$/, '').toUpperCase();
     const bytes = [];
     let buffer = 0;
     let bitCount = 0;
@@ -57,8 +57,15 @@ const HMAC_FUNCTIONS = {
  */
 function generateTOTP(account, timeMs = Date.now()) {
     const algorithm = (account.algorithm || 'SHA1').toUpperCase();
-    const digits = account.digits || 6;
-    const period = account.period || 30;
+    const digits = account.digits ?? 6;
+    const period = account.period ?? 30;
+
+    if (!Number.isInteger(digits) || digits < 4 || digits > 10) {
+        throw new Error(`Invalid digit length: ${digits}`);
+    }
+    if (!Number.isInteger(period) || period <= 0) {
+        throw new Error(`Invalid period: ${period}`);
+    }
 
     const hmacFn = HMAC_FUNCTIONS[algorithm] && HMAC_FUNCTIONS[algorithm]();
     if (!hmacFn) {
