@@ -5,6 +5,13 @@
 
     const CONFIG_URL = 'config.json';
 
+    const logo = document.getElementById('app-logo');
+    if (logo) {
+        logo.addEventListener('error', () => {
+            logo.hidden = true;
+        });
+    }
+
     function setText(id, value) {
         const el = document.getElementById(id);
         if (el && value) el.textContent = value;
@@ -22,10 +29,9 @@
     }
 
     function setIcon(url) {
-        const logo = document.getElementById('app-logo');
         if (logo) {
-            logo.src = url;
             logo.hidden = false;
+            logo.src = url;
         }
         ['icon', 'apple-touch-icon'].forEach(rel => {
             let link = document.querySelector(`link[rel="${rel}"]`);
@@ -39,6 +45,7 @@
     }
 
     function applyConfig(config) {
+        if (!config || typeof config !== 'object') return;
         if (config.title) document.title = config.title;
         setText('app-title', config.title);
         setText('app-description', config.description);
@@ -47,15 +54,24 @@
         if (config.icon_url) setIcon(config.icon_url);
     }
 
-    fetch(CONFIG_URL, { cache: 'no-cache' })
-        .then(res => {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            return res.json();
-        })
-        .then(applyConfig)
-        .catch(err => console.warn('config.json not loaded, using the built-in text:', err));
+    // Fetch config.json when served over HTTP(S); on file://, keep the built-in defaults
+    if (window.location.protocol !== 'file:') {
+        fetch(CONFIG_URL, { cache: 'no-cache' })
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(applyConfig)
+            .catch(err => console.warn('config.json not loaded, using built-in defaults:', err));
+    }
 
-    if ('serviceWorker' in navigator) {
+    const canUseServiceWorker =
+        'serviceWorker' in navigator &&
+        (window.location.protocol === 'https:' ||
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1');
+
+    if (canUseServiceWorker) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js')
                 .catch(err => console.warn('Offline support not available:', err));
