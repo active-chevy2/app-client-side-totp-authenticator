@@ -1,0 +1,81 @@
+<svg xmlns="http://w3.org" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- Deep Teal Shield Gradient -->
+    <linearGradient id="shieldBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#115e59" />
+    </linearGradient>
+
+    <!-- Crisp Silver/Mint Rim Gradient -->
+    <linearGradient id="shieldRim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0fdfa" />
+      <stop offset="100%" stop-color="#99f6e4" />
+    </linearGradient>
+
+    <!-- Warm Gold Key Gradient -->
+    <linearGradient id="goldKey" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="50%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+
+    <!-- Subtle Drop Shadow for the Key -->
+    <filter id="keyShadow" x="-15%" y="-15%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#042f2e" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- SHIELD GROUP -->
+  <g id="original-shield">
+    <!-- Outer Shield Base -->
+    <path d="M 128 20 
+             L 214 54 
+             C 214 134, 184 196, 128 232 
+             C 72 196, 42 134, 42 54 Z" 
+          fill="url(#shieldRim)" 
+          stroke="#042f2e" 
+          stroke-width="8" 
+          stroke-linejoin="round" />
+
+    <!-- Inner Shield Core -->
+    <path d="M 128 34 
+             L 200 63 
+             C 200 132, 174 186, 128 217 
+             C 82 186, 56 132, 56 63 Z" 
+          fill="url(#shieldBody)" />
+
+    <!-- Left-Half Subtle Highlight Facet -->
+    <path d="M 128 34 
+             L 56 63 
+             C 56 132, 82 186, 128 217 Z" 
+          fill="#ffffff" 
+          fill-opacity="0.08" />
+
+    <!-- Subtle Keyhole Etching in Background -->
+    <circle cx="128" cy="108" r="14" fill="#042f2e" fill-opacity="0.35" />
+    <path d="M 122 116 L 134 116 L 138 144 L 118 144 Z" fill="#042f2e" fill-opacity="0.35" />
+  </g>
+
+  <!-- DIAGONAL GOLDEN KEY GROUP -->
+  <g id="original-key" filter="url(#keyShadow)" transform="rotate(-45 128 132)">
+    <!-- Key Silhouette (Ornate Bow + Shaft + Bit Teeth) -->
+    <path d="M 52 132
+             A 28 28 0 1 1 106 142
+             L 192 142
+             C 198 142, 202 138, 202 132
+             C 202 126, 198 122, 192 122
+             L 106 122
+             A 28 28 0 1 1 52 132 Z
+             M 154 142 L 154 164 L 166 164 L 166 154 L 176 154 L 176 166 L 190 166 L 190 142 Z"
+          fill="url(#goldKey)"
+          stroke="#451a03"
+          stroke-width="6"
+          stroke-linejoin="round" />
+
+    <!-- Cutout Hole Inside the Key Bow -->
+    <circle cx="78" cy="132" r="11" fill="#0f766e" stroke="#451a03" stroke-width="5" />
+
+    <!-- Specular Highlight Line Along the Key Shaft -->
+    <line x1="112" y1="129" x2="188" y2="129" stroke="#fef9c3" stroke-width="3" stroke-linecap="round" />
+  </g>
+</svg>
