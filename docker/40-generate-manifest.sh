@@ -3,7 +3,6 @@
 # /docker-entrypoint.d/*.sh file before nginx starts.
 # It builds manifest.webmanifest from config.json, so the installed app gets
 # the same name, description and icon as the page.
-# Values in config.json must be plain text: no double quotes or backslashes.
 
 set -eu
 
@@ -17,7 +16,31 @@ if [ ! -f "$CONFIG" ]; then
 fi
 
 read_key() {
-    sed -n 's/.*"'"$1"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$CONFIG" | head -n 1
+    awk -v k="$1" '
+    {
+        pat = "\"" k "\""
+        idx = index($0, pat)
+        if (idx > 0) {
+            rest = substr($0, idx + length(pat))
+            sub(/^[[:space:]]*:[[:space:]]*"/, "", rest)
+            out = ""
+            esc = 0
+            for (i = 1; i <= length(rest); i++) {
+                c = substr(rest, i, 1)
+                if (esc) {
+                    out = out "\\" c
+                    esc = 0
+                } else if (c == "\\") {
+                    esc = 1
+                } else if (c == "\"") {
+                    print out
+                    exit
+                } else {
+                    out = out c
+                }
+            }
+        }
+    }' "$CONFIG" | head -n 1
 }
 
 TITLE="$(read_key title)"
@@ -28,29 +51,38 @@ ICON_SIZE="$(read_key icon_size)"
 
 TITLE="${TITLE:-2FA Authenticator}"
 SHORT_NAME="${SHORT_NAME:-$TITLE}"
-ICON_SIZE="${ICON_SIZE:-128x128}"
+ICON_SIZE="${ICON_SIZE:-256x256}"
 
-ICONS=""
-if [ -n "$ICON_URL" ]; then
-    ICON_TYPE="image/png"
-    case "$ICON_URL" in
-        *.svg|*.SVG) ICON_TYPE="image/svg+xml" ;;
-    esac
-    ICONS='{ "src": "'"$ICON_URL"'", "sizes": "'"$ICON_SIZE"'", "type": "'"$ICON_TYPE"'", "purpose": "any" }'
-fi
+ICON_TYPE="image/png"
+case "$ICON_URL" in
+    *.svg|*.SVG) ICON_TYPE="image/svg+xml" ;;
+    *.webp|*.WEBP) ICON_TYPE="image/webp" ;;
+    *.jpg|*.JPG|*.jpeg|*.JPEG) ICON_TYPE="image/jpeg" ;;
+esac
 
-cat > "$OUT" << EOF
 {
-  "name": "$TITLE",
-  "short_name": "$SHORT_NAME",
-  "description": "$DESCRIPTION",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#FFFBFE",
-  "theme_color": "#6750A4",
-  "icons": [ $ICONS ]
-}
-EOF
+    printf '{\n'
+    printf '  "name": "%s",\n' "$TITLE"
+    printf '  "short_name": "%s",\n' "$SHORT_NAME"
+    printf '  "description": "%s",\n' "$DESCRIPTION"
+    printf '  "start_url": "./",\n'
+    printf '  "scope": "./",\n'
+    printf '  "display": "standalone",\n'
+    printf '  "background_color": "#FFFBFE",\n'
+    printf '  "theme_color": "#FFFBFE",\n'
+    if [ -n "$ICON_URL" ]; then
+        printf '  "icons": [\n'
+        printf '    {\n'
+        printf '      "src": "%s",\n' "$ICON_URL"
+        printf '      "sizes": "%s",\n' "$ICON_SIZE"
+        printf '      "type": "%s",\n' "$ICON_TYPE"
+        printf '      "purpose": "any"\n'
+        printf '    }\n'
+        printf '  ]\n'
+    else
+        printf '  "icons": []\n'
+    fi
+    printf '}\n'
+} > "$OUT"
 
 echo "40-generate-manifest: wrote $OUT"
