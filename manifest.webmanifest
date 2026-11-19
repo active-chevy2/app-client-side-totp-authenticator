@@ -9,9 +9,9 @@
   "theme_color": "#6750A4",
   "icons": [
     {
-      "src": "https://icons.iconarchive.com/icons/gartoon-team/gartoon-apps/128/seahorse-key-ssh-icon.png",
-      "sizes": "128x128",
-      "type": "image/png",
+      "src": "icon.svg",
+      "sizes": "256x256",
+      "type": "image/svg+xml",
       "purpose": "any"
     }
   ]
