@@ -1,6 +1,8 @@
 services:
   totp-authenticator:
     build: .
+    ports:
+      - "${PORT:-8080}:80"
     expose:
       - "80"
     restart: unless-stopped
