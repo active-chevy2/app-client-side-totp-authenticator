@@ -19,6 +19,7 @@ const APP_FILES = [
     'totp.js',
     'app.js',
     'config.json',
+    'icon.svg',
     'manifest.webmanifest',
     'vendor/crypto-js.js',
     'fonts/roboto-latin-400-normal.woff2',
