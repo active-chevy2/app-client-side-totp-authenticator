@@ -32,7 +32,11 @@ ICON_SIZE="${ICON_SIZE:-128x128}"
 
 ICONS=""
 if [ -n "$ICON_URL" ]; then
-    ICONS='{ "src": "'"$ICON_URL"'", "sizes": "'"$ICON_SIZE"'", "type": "image/png", "purpose": "any" }'
+    ICON_TYPE="image/png"
+    case "$ICON_URL" in
+        *.svg|*.SVG) ICON_TYPE="image/svg+xml" ;;
+    esac
+    ICONS='{ "src": "'"$ICON_URL"'", "sizes": "'"$ICON_SIZE"'", "type": "'"$ICON_TYPE"'", "purpose": "any" }'
 fi
 
 cat > "$OUT" << EOF
