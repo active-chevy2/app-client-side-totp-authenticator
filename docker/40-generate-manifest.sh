@@ -49,7 +49,7 @@ SHORT_NAME="$(read_key short_name)"
 ICON_URL="$(read_key icon_url)"
 ICON_SIZE="$(read_key icon_size)"
 
-TITLE="${TITLE:-2FA Authenticator}"
+TITLE="${TITLE:-Offline TOTP Viewer}"
 SHORT_NAME="${SHORT_NAME:-$TITLE}"
 ICON_SIZE="${ICON_SIZE:-256x256}"
 
