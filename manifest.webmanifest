@@ -1,6 +1,6 @@
 {
-  "name": "2FA Authenticator",
-  "short_name": "2FA Authenticator",
+  "name": "Offline TOTP Viewer",
+  "short_name": "Offline TOTP Viewer",
   "description": "Live codes from your Bitwarden Authenticator exports",
   "start_url": "./",
   "scope": "./",
